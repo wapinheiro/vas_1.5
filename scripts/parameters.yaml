@@ -1,0 +1,12 @@
+spot_numbers: # List of spot numbers to be processed 
+  - 1
+  - 6
+  - 61
+  - 66  
+
+run_id: # Run identifier for the run
+  - 18
+  - 20
+  - 21
+  - 22
+  - 143
