@@ -10,3 +10,12 @@ run_id: # Run identifier for the run
   - 21
   - 22
   - 143
+
+row_numbers: # Row number(s) for filtering in case 3
+  - 1
+  - 2
+  # - 3
+  # - 4
+
+cassette_numbers: # Cassette number(s) for filtering in case 3
+  - "Cassette 01"

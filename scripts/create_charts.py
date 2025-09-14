@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import yaml
 import glob
 import openpyxl
@@ -9,6 +10,7 @@ import csv
 import base64
 from io import BytesIO
 import matplotlib
+import numpy as np  
 matplotlib.use('Agg')
 
 def generate_spotnumber_colors():
@@ -495,20 +497,233 @@ def create_chart_case_02(grid=False, spread_method='std_radius', percentile=95):
         f.write('\n'.join(html))
     print(f"Charts saved to {out_file}")
 
+def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
+    """
+    Create scatterplot(s) for XOffset vs YOffset from data/views/view_case_03.csv.
+    Features:
+    - For each run_id (columns), for each pallette_number (rows), plot all row numbers in the same chart, colored by row number.
+    - Use a dynamically generated, maximally distinct color palette for each run's filtered set of row numbers:
+        - For up to 12 row numbers, assign a fixed, ordered set of high-contrast colors (black, yellow, red, cyan, blue, lime, magenta, orange, green, pink, purple, brown) for maximum mutual contrast.
+        - For more than 12, generate vivid HSV colors.
+        - The color mapping is consistent for all charts and the legend within the report.
+        - Add a color legend at the top of the report, showing the color assigned to each row number.
+        - Apply filters from parameters.yaml (row_number, run_id, cassette_number and spot_number).
+        - Keep axis centered and fixed at [-0.3, 0.3] for both X and Y axes for all charts.
+        - Draw cross axes at (0,0) for all charts.
+        - Draw a black solid circle at 2× the standard deviation of the radius (2σ) for each chart, and display the value in the chart title.
+        - Draw a blue dotted circle at radius 0.2 to represent the tolerance area.
+        - Display the average std radius for each run below the run title.
+        - Add a global legend at the top explaining the 2σ circle (black solid), the tolerance circle (blue dotted), and their statistical meaning.
+        - Output: HTML file in output/charts/ (grid or non-grid layout).
+
+
+        """
+    
+    # Load data
+    data_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'views', 'view_case_03.csv')) # Adjusted for case_03.csv
+    df = pd.read_csv(data_file, dtype=str)
+    df['XOffset'] = pd.to_numeric(df['XOffset'], errors='coerce')
+    df['YOffset'] = pd.to_numeric(df['YOffset'], errors='coerce')
+
+    # Ensure 'SpotNumber' column exists
+    if 'SpotNumber' in df.columns:
+        df['SpotNumber'] = df['SpotNumber'].astype(str)
+    else:
+        df['SpotNumber'] = df['spot_number'].astype(str)
+    df['run_id'] = df['run_id'].astype(str)
+    df['pallette_number'] = df['pallette_number'].astype(str)
+
+    # Remove outlier/placeholder values (e.g., 999.0)
+    mask = (df['XOffset'] != 999.0) & (df['YOffset'] != 999.0)
+    df = df[mask]
+
+    # Load color mapping and parameters
+    spot_colors = load_spotnumber_colors()
+
+    # Load parameters
+    params = load_parameters()
+
+    # Setup filters from parameters.yaml
+    spot_filter = set(str(s) for s in params.get('spot_numbers', [])) if params.get('spot_numbers') else None # Adjusted to 'spot_numbers'
+    run_filter = set(str(r) for r in params.get('run_id', [])) if params.get('run_id') else None # Adjusted to 'run_id'
+    row_filter = set(str(r) for r in params.get('row_numbers', [])) if params.get('row_numbers') else None # New filter for 'row_numbers'
+    cassette_filter = set(str(c) for c in params.get('cassette_numbers', [])) if params.get('cassette_numbers') else None # New filter for 'cassette_numbers'
+
+    # print(f"[DEBUG] Before filtering: {df.shape[0]} rows")
+
+    # Apply filters
+    if spot_filter:
+        df = df[df['SpotNumber'].isin(spot_filter)]
+    if run_filter:
+        df = df[df['run_id'].isin(run_filter)]
+    if row_filter and 'RowNumber' in df.columns:
+        df = df[df['RowNumber'].astype(str).isin(row_filter)]
+    if cassette_filter and 'cassette_number' in df.columns:
+        df = df[df['cassette_number'].astype(str).isin(cassette_filter)]
+
+    # print(f"[DEBUG] After filtering: {df.shape[0]} rows")
+    # print(f"[DEBUG] First 5 rows after filtering:\n{df.head()}")
+
+    # After filtering, get unique row numbers to create color mapping
+    unique_rows = sorted(df['RowNumber'].unique(), key=lambda x: int(x))
+    n_rows = len(unique_rows)
+    unique_row_numbers = df['RowNumber'].unique() if 'RowNumber' in df.columns else []
+    # print(f"[DEBUG] Unique row numbers after filtering: {unique_row_numbers}")
+
+    # Generate color mapping for row numbers
+    high_contrast_colors = [
+        '#0000FF',  # blue        
+        '#FF0000',  # red
+        '#00FFFF',  # cyan
+        '#FFD700',  # yellow
+        '#00FF00',  # lime
+        '#FF00FF',  # magenta
+        '#FFA500',  # orange
+        '#008000',  # green
+        '#FFC0CB',  # pink
+        '#800080',  # purple
+        '#A52A2A',  # brown
+        '#FF6347',  # tomato (added to replace black)
+    ]
+
+    if n_rows <= len(high_contrast_colors):
+        color_list = high_contrast_colors[:n_rows]
+        # Assign in order for maximum group contrast
+        row_colors = {row: color for row, color in zip(unique_rows, color_list)} 
+    else:                
+        color_indices = np.linspace(0, 1, n_rows, endpoint=False)
+        np.random.shuffle(color_indices)
+        row_colors = {row: mcolors.to_hex(mcolors.hsv_to_rgb([idx, 0.95, 0.95])) for row, idx in zip(unique_rows, color_indices)}
+
+    # Prepare output
+    out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output', 'charts'))
+    os.makedirs(out_dir, exist_ok=True)
+    out_file = os.path.join(out_dir, 'case_03_grid.html' if grid else 'case_03.html')
+
+    #set axis limits (centered, same for all)
+    xlim = (-0.3, 0.3)
+    ylim = (-0.3, 0.3)  
+
+    # Grouping
+    runs = sorted(df['run_id'].unique(), key=lambda x: int(x)) # New line to flag runs with letters
+    pallettes = sorted(df['pallette_number'].unique(), key=lambda x: int(x)) # New line to flag pallettes with letters
+    rows = sorted(df['RowNumber'].unique(), key=lambda x: int(x)) if 'RowNumber' in df.columns else [] # New line to flag rows with letters     
+
+    # Build HTML legend for all row numbers/colors
+    legend_html = '<div style="margin-bottom:10px;"><b>Row Color Legend:</b><br>'
+    for row in unique_rows:
+        color = row_colors.get(row, '#000000') 
+        legend_html += f'<span style="display:inline-block;width:16px;height:16px;background:{color};margin-right:4px;"></span> {row} '
+    legend_html += '</div>'
+    html = ['<html><head><title>Case 03 Charts</title></head><body>']
+    
+    # Add visual legend for circles
+    html.append('<div style="margin-bottom:15px; padding:10px; background:#f9f9f9; border:1px solid #ddd;">')
+    html.append('<div style="margin-bottom:5px;"><span style="display:inline-block; width:20px; height:3px; background:black; margin-right:8px; vertical-align:middle;"></span><b>Black circle:</b> Density area (86% of data points)</div>')
+    html.append('<div><span style="display:inline-block; width:20px; height:2px; background:blue; border-top:2px dotted blue; margin-right:8px; vertical-align:middle;"></span><b>Blue dotted line:</b> Tolerance area</div>')
+    html.append('</div>')
+    html.append(legend_html)    
+
+    if grid:
+        html.append('<h1>Case 03 Grid Layout</h1>')
+        html.append('<table border="1" style="border-collapse:collapse;"><tr><th></th>')
+        for run in runs:
+            html.append(f'<th>Run {run}</th>')
+        html.append('</tr>')
+        for pallette in pallettes:
+            html.append(f'<tr><td>Pallette {pallette}</td>')
+            for run in runs:
+                subdf = df[(df['run_id'] == run) & (df['pallette_number'] == pallette)]
+                fig, ax = plt.subplots(figsize=(2,2))
+                for row in rows:
+                    rowdf = subdf[subdf['RowNumber'] == row] if 'RowNumber' in subdf.columns else pd.DataFrame()
+                    if not rowdf.empty:
+                        ax.scatter(rowdf['XOffset'], rowdf['YOffset'], color=row_colors.get(row, '#000000'), s=1)
+                ax.set_xlim(xlim)
+                ax.set_ylim(ylim)
+                ax.set_title("")
+                ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.8)
+                ax.axvline(x=0, color='gray', linestyle='--', linewidth=0.8)
+                ax.set_aspect('equal')
+                plt.tight_layout()
+                buf = BytesIO()
+                plt.savefig(buf, format='png')
+                plt.close(fig)
+                img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+                html.append(f'<td><img src="data:image/png;base64,{img_b64}"/></td>')
+            html.append('</tr>')
+        html.append('</table>')
+    else: 
+        html.append('<h1>Case 03</h1>')
+        for run in runs:
+            run_html = []
+            run_html.append(f'<h2>Run {run}</h2>')
+            pallette_std_radii = {}
+            run_spread_values = []  # Collect all spread values for this run
+            for pallette in pallettes:
+                subdf = df[(df['run_id'] == run) & (df['pallette_number'] == pallette)]
+                if subdf.empty:
+                    continue
+                fig, ax = plt.subplots(figsize=(3,3))
+                all_radii = []
+                for row in rows:
+                    rowdf = subdf[subdf['RowNumber'] == row] if 'RowNumber' in subdf.columns else pd.DataFrame()
+                    if not rowdf.empty:
+                        ax.scatter(rowdf['XOffset'], rowdf['YOffset'], color=row_colors.get(row, '#000000'), s=1)
+                        radii = (rowdf['XOffset']**2 + rowdf['YOffset']**2)**0.5
+                        all_radii.extend(radii.tolist())
+                # Use measure_spread for this pallette/run (std_radius)
+                spread_value = measure_spread(subdf['XOffset'], subdf['YOffset'], method=spread_method, percentile=percentile)
+                circle_radius = 2 * spread_value
+                pallette_std_radii[pallette] = pallette_std_radii.get(pallette, []) + [spread_value]
+                run_spread_values.append(spread_value)  # Add to run's list
+                if not subdf.empty:
+                    from matplotlib.patches import Circle as MplCircle
+                    # Draw tolerance circle at radius 0.2 (blue dotted)
+                    tolerance_circle = plt.Circle((0, 0), 0.2, color='blue', fill=False, linestyle=':', linewidth=1.2, alpha=0.7)
+                    ax.add_patch(tolerance_circle)
+                    # Draw black solid line for high density circle (on top)
+                    circle = plt.Circle((0, 0), circle_radius, color='black', fill=False, linestyle='-', linewidth=3, alpha=1.0)
+                    ax.add_patch(circle)
+                    metric_text = f"Std Radius: {spread_value:.4f} (2σ circle)"
+                else:
+                    metric_text = "No data"
+                ax.set_xlim(xlim)
+                ax.set_ylim(ylim)
+                ax.set_title(f'Pallette {pallette}\n{metric_text}')
+                ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.8)
+                ax.axvline(x=0, color='gray', linestyle='--', linewidth=0.8)
+                ax.set_aspect('equal')
+                plt.tight_layout(pad=0.1)
+                buf = BytesIO()
+                plt.savefig(buf, format='png')
+                plt.close(fig)
+                img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+                run_html.append(f'<div style="display:inline-block;margin:5px;"><img src="data:image/png;base64,{img_b64}"/></div>')
+            # After all pallettes for this run, show average spread value for the run right below the run title
+            if run_spread_values:
+                avg_spread = sum(run_spread_values) / len(run_spread_values)
+                method_label = spread_method.replace('_', ' ')
+                run_html.insert(1, f'<div><b>Run {run} average {method_label}: {avg_spread:.4f}</b></div>')
+            run_html.append('<hr/>')
+            html.extend(run_html)
+    html.append('</body></html>')
+    with open(out_file, 'w') as f:
+        f.write('\n'.join(html))
+    print(f"Charts saved to {out_file}")    
+
+               
+            
+
+
 def main():
     # Generate spotnumber color mapping if needed
-    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'spotnumber_colors.csv')):
-        generate_spotnumber_colors()
-    # Create chart for case 01 (non-grid by default)
+    # if not os.path.exists(os.path.join(os.path.dirname(__file__), 'spotnumber_colors.csv')):
+    #     generate_spotnumber_colors()
     create_chart_case_01()
-    # To create grid layout, uncomment the following line:
-    # create_chart_case_01(grid=True)
-    # Create chart for case 02 (non-grid by default)
     create_chart_case_02()
-    # To create grid layout, uncomment the following line:
-    # create_chart_case_02(grid=True)
-    # Add more chart creation functions as needed
+    create_chart_case_03()
 
-# Main execution
+
 if __name__ == "__main__":
     main()
