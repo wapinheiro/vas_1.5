@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from matplotlib.patches import Circle as MplCircle
 import yaml
 import glob
 import openpyxl
@@ -516,7 +517,6 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
         - Add a global legend at the top explaining the 2σ circle (black solid), the tolerance circle (blue dotted), and their statistical meaning.
         - Output: HTML file in output/charts/ (grid or non-grid layout).
 
-
         """
     
     # Load data
@@ -636,7 +636,7 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
 
     # Insert filter summary at the top (after <body> and before legends)
     if filter_summary_html:
-        html.insert(1, filter_summary_html)
+        html.insert(1, filter_summary_html) # Insert after <body> tag
 
     if grid:
         html.append('<h1>Case 03 Grid Layout</h1>')
@@ -676,8 +676,20 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
             run_spread_values = []  # Collect all spread values for this run
             for pallette in pallettes:
                 subdf = df[(df['run_id'] == run) & (df['pallette_number'] == pallette)]
+                
+                # Count data points for each row (including zero)
+                row_counts = {}
+                for row in rows:
+                    if 'RowNumber' in subdf.columns:
+                        count = subdf[subdf['RowNumber'] == row].shape[0]
+                    else:
+                        count = 0
+                    row_counts[row] = count
+                # Build summary string
+                count_summary = ', '.join([f'Row {row}: {row_counts[row]}' for row in rows])                
+                
                 if subdf.empty:
-                    continue
+                    continue                    
                 fig, ax = plt.subplots(figsize=(3,3))
                 all_radii = []
                 for row in rows:
@@ -691,8 +703,7 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
                 circle_radius = 2 * spread_value
                 pallette_std_radii[pallette] = pallette_std_radii.get(pallette, []) + [spread_value]
                 run_spread_values.append(spread_value)  # Add to run's list
-                if not subdf.empty:
-                    from matplotlib.patches import Circle as MplCircle
+                if not subdf.empty:                    
                     # Draw tolerance circle at radius 0.2 (blue dotted)
                     tolerance_circle = plt.Circle((0, 0), 0.2, color='blue', fill=False, linestyle=':', linewidth=1.2, alpha=0.7)
                     ax.add_patch(tolerance_circle)
@@ -702,9 +713,14 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
                     metric_text = f"Std Radius: {spread_value:.4f} (2σ circle)"
                 else:
                     metric_text = "No data"
+
+                # Build count summary string for plot title
+                count_summary = ', '.join([f'Row {row}: {row_counts[row]}' for row in rows])                
+                
+                ax.set_title(f'Pallette {pallette}\n{metric_text}\nData point count (Row): {count_summary}')
                 ax.set_xlim(xlim)
                 ax.set_ylim(ylim)
-                ax.set_title(f'Pallette {pallette}\n{metric_text}')
+                ax.set_title(f'Pallette {pallette}\n{metric_text}\nData point count: \n{count_summary}')
                 ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.8)
                 ax.axvline(x=0, color='gray', linestyle='--', linewidth=0.8)
                 ax.set_aspect('equal')
@@ -734,8 +750,8 @@ def main():
     # Generate spotnumber color mapping if needed
     # if not os.path.exists(os.path.join(os.path.dirname(__file__), 'spotnumber_colors.csv')):
     #     generate_spotnumber_colors()
-    create_chart_case_01()
-    create_chart_case_02()
+    # create_chart_case_01()
+    # create_chart_case_02()
     create_chart_case_03()
 
 
