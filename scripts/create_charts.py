@@ -551,16 +551,26 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
 
     # print(f"[DEBUG] Before filtering: {df.shape[0]} rows")
 
-    # Apply filters
+    # Apply filters and build filter summary
+    filter_parts = []
     if spot_filter:
         df = df[df['SpotNumber'].isin(spot_filter)]
+        filter_parts.append(f"Spot = [{', '.join(sorted(spot_filter))}]")
     if run_filter:
         df = df[df['run_id'].isin(run_filter)]
+        filter_parts.append(f"Run = [{', '.join(sorted(run_filter))}]")
     if row_filter and 'RowNumber' in df.columns:
         df = df[df['RowNumber'].astype(str).isin(row_filter)]
+        filter_parts.append(f"Row = [{', '.join(sorted(row_filter))}]")
     if cassette_filter and 'cassette_number' in df.columns:
         df = df[df['cassette_number'].astype(str).isin(cassette_filter)]
+        filter_parts.append(f"Cassette = [{', '.join(sorted(cassette_filter))}]")
+    if filter_parts:
+        filter_summary_html = f'<div style="margin-bottom:10px; font-weight:bold;">Filters applied: {"; ".join(filter_parts)}</div>'
+    else:
+        filter_summary_html = ''    
 
+       
     # print(f"[DEBUG] After filtering: {df.shape[0]} rows")
     # print(f"[DEBUG] First 5 rows after filtering:\n{df.head()}")
 
@@ -623,6 +633,10 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
     html.append('<div><span style="display:inline-block; width:20px; height:2px; background:blue; border-top:2px dotted blue; margin-right:8px; vertical-align:middle;"></span><b>Blue dotted line:</b> Tolerance area</div>')
     html.append('</div>')
     html.append(legend_html)    
+
+    # Insert filter summary at the top (after <body> and before legends)
+    if filter_summary_html:
+        html.insert(1, filter_summary_html)
 
     if grid:
         html.append('<h1>Case 03 Grid Layout</h1>')
