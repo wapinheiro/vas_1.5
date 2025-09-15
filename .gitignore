@@ -54,3 +54,13 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+
+# Keep data folder structure but ignore all files except .gitkeep
+/data/*
+!/data/.gitkeep
+!/data/processed/
+!/data/source_data/
+!/data/views/
+!/data/processed/.gitkeep
+!/data/source_data/.gitkeep
+!/data/views/.gitkeep
