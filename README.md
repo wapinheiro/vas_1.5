@@ -1,3 +1,17 @@
+## VAS One-Click Pipeline
+
+To refresh the data pipeline and generate all reports in one step, use the one-click script:
+
+```
+python3 scripts/one_click_vas.py
+```
+
+This script will:
+- Run `scripts/processing.py` to refresh the data pipeline
+- Run `scripts/create_charts.py` to generate all reports, including Case 1, Case 2, and Case 3 (VAS)
+- Log progress and details to `scripts/logs/` (DEBUG level) and print user-friendly messages to the terminal (INFO level)
+
+You can find detailed logs in the `scripts/logs/` folder after running the script.
 # VAS - Data Analysis and Visualization
 
 This project processes and visualizes VAS (Visual Analysis System) data, creating interactive charts for offset analysis.
@@ -19,8 +33,10 @@ This project processes and visualizes VAS (Visual Analysis System) data, creatin
 
 ## Features
 
+
 - **Case 01**: Scatterplot analysis grouped by run_id and SpotNumber
 - **Case 02**: Scatterplot analysis grouped by run_id and PalletteNumber
+- **Case 03 (VAS)**: Scatterplot analysis grouped by run_id and PalletteNumber, colored by RowNumber, with row color legend, axis centering, cross axes, 2σ circle, tolerance circle, global legend, filter summary, and data point count per row displayed in each chart.
 - Interactive HTML charts with filtering capabilities
 - Statistical analysis with density circles (86% of data points)
 - Tolerance area visualization
