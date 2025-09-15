@@ -235,6 +235,49 @@ def create_view_case_02():
     merged[out_cols].to_csv(output_file, index=False)
     print(f"View for case 2 saved to {output_file}")
 
+def create_view_case_03():
+    """
+    Creates a view for case 3 by joining unified_printing.csv and pallette_table.csv.
+    - Loads data/processed/unified_printing.csv and data/processed/pallette_table.csv
+    - Selects columns: run_id, RowNumber, SpotNumber, XOffset, YOffset, TaskName2 from unified_printing.csv
+    - Selects pallette_number, substrate_barcode from pallette_table.csv
+    - Left joins on unified_printing.TaskName2 == pallette_table.substrate_barcode
+    - Keeps all matches (if multiple)
+    - Outputs columns: run_id, SpotNumber, XOffset, YOffset, pallette_number
+    - Saves as data/views/view_case_02.csv
+    """
+
+    printing_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed', 'unified_printing.csv'))
+    pallette_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed', 'pallette_table.csv'))
+    cassette_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed', 'cassette_table.csv'))
+    output_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'views'))
+    os.makedirs(output_folder, exist_ok=True)
+    output_file = os.path.join(output_folder, 'view_case_03.csv')
+
+    # Load data
+    printing_cols = ['run_id', 'RowNumber', 'SpotNumber', 'XOffset', 'YOffset', 'TaskName2']
+    pallette_cols = ['pallette_number', 'substrate_barcode']
+    cassette_cols = ['cassette_number', 'substrate_barcode', 'run']
+
+    printing_df = pd.read_csv(printing_file, dtype=str)
+    pallette_df = pd.read_csv(pallette_file, dtype=str)
+    cassette_df = pd.read_csv(cassette_file, dtype=str)
+
+    # Filter columns
+    printing_df = printing_df[[col for col in printing_cols if col in printing_df.columns]]
+    pallette_df = pallette_df[[col for col in pallette_cols if col in pallette_df.columns]]
+    cassette_df = cassette_df[[col for col in cassette_cols if col in cassette_df.columns]]
+
+
+    # Left join
+    merged = printing_df.merge(pallette_df, how='left', left_on='TaskName2', right_on='substrate_barcode')
+    merged = merged.merge(cassette_df, how='left', left_on=['run_id', 'TaskName2'], right_on=['run', 'substrate_barcode'])
+
+    # Select output columns
+    out_cols = ['run_id', 'RowNumber', 'SpotNumber', 'XOffset', 'YOffset', 'cassette_number', 'pallette_number']
+    merged[out_cols].to_csv(output_file, index=False)
+    print(f"View for case 3 saved to {output_file}")
+
 
 # Main execution
 if __name__ == "__main__":  
@@ -244,5 +287,4 @@ if __name__ == "__main__":
     create_pallette_table()
     create_view_case_01()
     create_view_case_02()
-
-
+    create_view_case_03()
