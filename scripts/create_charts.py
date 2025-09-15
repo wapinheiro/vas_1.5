@@ -750,8 +750,8 @@ def main():
     # Generate spotnumber color mapping if needed
     # if not os.path.exists(os.path.join(os.path.dirname(__file__), 'spotnumber_colors.csv')):
     #     generate_spotnumber_colors()
-    # create_chart_case_01()
-    # create_chart_case_02()
+    create_chart_case_01()
+    create_chart_case_02()
     create_chart_case_03()
 
 
