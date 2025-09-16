@@ -14,7 +14,7 @@ This script will:
 You can find detailed logs in the `scripts/logs/` folder after running the script.
 # VAS - Data Analysis and Visualization
 
-This project processes and visualizes VAS (Visual Analysis System) data, creating interactive charts for offset analysis.
+This project processes and visualizes multiple CTD2 runs data, creating interactive charts for offset analysis.
 
 
 **Project Folder Architecture**
@@ -25,7 +25,7 @@ This diagram shows the main folders and files, their purposes, and how data flow
 vas_1.5/
 ├── data/
 │   ├── processed/         # Processed CSV files
-│   ├── source_data/       # Raw data files and templates
+│   ├── source_data/       # Raw data files and templates (printing_raw_data_report .csv AND run_parameters_template .xlsx)
 │   └── views/             # Data views for different cases
 ├── output/
 │   └── charts/            # Generated charts and reports (html)
