@@ -3,7 +3,7 @@
 To refresh the data pipeline and generate all reports in one step, use the one-click script:
 
 ```
-python3 scripts/one_click_vas.py
+python scripts/one_click_vas.py
 ```
 
 This script will:
@@ -16,14 +16,30 @@ You can find detailed logs in the `scripts/logs/` folder after running the scrip
 
 This project processes and visualizes VAS (Visual Analysis System) data, creating interactive charts for offset analysis.
 
-## Project Structure
 
-- `data/` - Contains source data, processed data, and views
-  - `source_data/` - Raw data files and templates
-  - `processed/` - Processed CSV files
-  - `views/` - Data views for different cases
-- `scripts/` - Python scripts for data processing and chart creation
-- `output/` - Generated charts and reports
+**Project Folder Architecture**
+
+This diagram shows the main folders and files, their purposes, and how data flows from raw sources to processed outputs and reports.
+
+```
+vas_1.5/
+├── data/
+│   ├── processed/         # Processed CSV files
+│   ├── source_data/       # Raw data files and templates
+│   └── views/             # Data views for different cases
+├── output/
+│   └── charts/            # Generated charts and reports (html)
+├── scripts/
+│   ├── create_charts.py   # Main script for generating charts
+│   ├── one_click_vas.py   # Pipeline runner script (main script to generate the analysis)
+│   ├── parameters.yaml    # Configuration file (parameters configuration for a customized analysis)
+│   ├── processing.py      # Data processing script (for data intake)
+│   ├── spotnumber_colors.csv # Color mappings for spot numbers
+│   └── logs/              # Log files (for debbuging)
+├── README.md
+├── requirements.txt       # Essencial libraries to run the scripts
+└── .gitignore             # What to be ignored in git (e.g: big data files)
+```
 
 ## Main Scripts
 
