@@ -1,8 +1,44 @@
 spot_numbers: # List of spot numbers to be processed 
   - 1
   - 6
+  - 10
+  - 14
+  - 15
+  - 16
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 26
+  - 27
+  - 28
+  - 29
+  - 30
+  - 31
+  - 33
+  - 34
+  - 35
+  - 36
+  - 39
+  - 41
+  - 42
+  - 43
+  - 45
+  - 46
+  - 47
+  - 48
+  - 50
+  - 51
+  - 52
+  - 54
+  - 56
+  - 57
+  - 58
+  - 59
   - 61
-  - 66  
+  - 66
 
 run_id: # Run identifier for the run
   - 147
@@ -24,8 +60,8 @@ run_id: # Run identifier for the run
 
 row_numbers: # Row number(s) for filtering in case 3
   - 1
-  - 2
-  # - 3
+  # - 2
+  - 3
   # - 4
 
 cassette_numbers: # Cassette number(s) for filtering in case 3

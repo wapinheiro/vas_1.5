@@ -34,9 +34,9 @@ logger.addHandler(console_handler)
 def run_script(script_name):
     script_path = os.path.join(os.path.dirname(__file__), script_name)
     logger.info(f'Running {script_name}...')
-    logger.debug(f'Executing: python3 {script_path}')
+    logger.debug(f'Executing: python {script_path}')
     try:
-        result = subprocess.run(['python3', script_path], capture_output=True, text=True)
+        result = subprocess.run(['python', script_path], capture_output=True, text=True)
         logger.debug(f'STDOUT for {script_name}:\n{result.stdout}')
         logger.debug(f'STDERR for {script_name}:\n{result.stderr}')
         if result.returncode == 0:
