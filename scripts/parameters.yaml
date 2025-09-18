@@ -41,22 +41,24 @@ spot_numbers: # List of spot numbers to be processed
   - 66
 
 run_id: # Run identifier for the run
-  - 116
-  - 122
-  - 147
-  - 148
-  - 149
-  - 150
-  - 151
-  - 152
-  - 154
-  - 155
-  - 156
-  - 157
-  - 158
-  - 159
-  - 160
-  - 161
+  # - 116
+  # - 122
+  # - 147
+  # - 148
+  # - 149
+  # - 150
+  # - 151
+  # - 152
+  # - 154
+  # - 155
+  # - 156
+  # - 157
+  # - 158
+  # - 159
+  # - 160
+  # - 161
+  - 162
+  - 25494
   
 
 row_numbers: # Row number(s) for filtering in case 3

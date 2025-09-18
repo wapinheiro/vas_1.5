@@ -27,7 +27,7 @@ def unify_printing_files():
         if df.empty:
             continue
         run_id_str = os.path.basename(file).split('_')[-1].split('.')[0]
-        run_id = int(run_id_str[-3:])
+        run_id = int(run_id_str[-5:])
         df.insert(0, 'run_id', run_id)
         all_dfs.append(df)
     if not all_dfs:
