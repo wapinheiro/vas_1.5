@@ -14,6 +14,16 @@ import matplotlib
 import numpy as np  
 matplotlib.use('Agg')
 
+def safe_int_sort_key(x):
+    """
+    Helper function for sorting that handles both numeric and alphanumeric values.
+    Tries to convert to int first, falls back to string sorting if that fails.
+    """
+    try:
+        return (0, int(x))  # (priority, numeric_value) - numeric values come first
+    except (ValueError, TypeError):
+        return (1, str(x))  # (priority, string_value) - alphanumeric values come second
+
 def generate_spotnumber_colors():
     """
     Generates a CSV file mapping spot numbers 1-66 to random hex colors.
@@ -142,7 +152,7 @@ def create_chart_case_01(grid=False):
 
     # Grouping
     #runs = sorted(df['run_id'].unique()) # New line to flag runs with letters 
-    runs = sorted(df['run_id'].unique(), key=lambda x: int(x))
+    runs = sorted(df['run_id'].unique(), key=safe_int_sort_key)
     spots = sorted(df['SpotNumber'].unique(), key=lambda x: int(x))
 
     # Build HTML legend for all spot numbers/colors (dynamic palette)
@@ -383,7 +393,7 @@ def create_chart_case_02(grid=False, spread_method='std_radius', percentile=95):
     # print(f"[DEBUG] Axis limits: xlim={xlim}, ylim={ylim}")
 
     # Grouping
-    runs = sorted(df['run_id'].unique(), key=lambda x: int(x))
+    runs = sorted(df['run_id'].unique(), key=safe_int_sort_key)
     pallettes = sorted(df['pallette_number'].unique(), key=lambda x: int(x))
     spots = sorted(df['SpotNumber'].unique(), key=lambda x: int(x))
     # print(f"[DEBUG] Runs: {runs}")
@@ -615,7 +625,7 @@ def create_chart_case_03(grid=False, spread_method='std_radius', percentile=95):
     ylim = (-0.3, 0.3)  
 
     # Grouping
-    runs = sorted(df['run_id'].unique(), key=lambda x: int(x)) # New line to flag runs with letters
+    runs = sorted(df['run_id'].unique(), key=safe_int_sort_key) # New line to flag runs with letters
     pallettes = sorted(df['pallette_number'].unique(), key=lambda x: int(x)) # New line to flag pallettes with letters
     rows = sorted(df['RowNumber'].unique(), key=lambda x: int(x)) if 'RowNumber' in df.columns else [] # New line to flag rows with letters     
 

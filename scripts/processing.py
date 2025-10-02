@@ -27,7 +27,12 @@ def unify_printing_files():
         if df.empty:
             continue
         run_id_str = os.path.basename(file).split('_')[-1].split('.')[0]
-        run_id = int(run_id_str[-5:])
+        # Handle both numeric and alphanumeric run_id values
+        try:
+            run_id = int(run_id_str[-5:])
+        except ValueError:
+            # If conversion to int fails, use the string as is
+            run_id = run_id_str
         df.insert(0, 'run_id', run_id)
         all_dfs.append(df)
     if not all_dfs:
@@ -68,7 +73,12 @@ def unify_run_parameters_files():
         if df.empty:
             continue
         run_id_str = os.path.basename(file).split('_')[-1].split('.')[0]
-        run_id = int(run_id_str[-3:])
+        # Handle both numeric and alphanumeric run_id values
+        try:
+            run_id = int(run_id_str[-5:])
+        except ValueError:
+            # If conversion to int fails, use the string as is
+            run_id = run_id_str
         df.insert(0, 'run_id', run_id)
         all_dfs.append(df)
     if not all_dfs:
@@ -106,7 +116,13 @@ def create_cassette_table():
     cassette_rows = []
     xlsx_files = glob.glob(os.path.join(source_folder, 'run_parameters_template_*.xlsx'))
     for xlsx_path in xlsx_files:
-        run = int(os.path.basename(xlsx_path).split('_')[-1].split('.')[0])
+        run_id_str = os.path.basename(xlsx_path).split('_')[-1].split('.')[0]
+        # Handle both numeric and alphanumeric run_id values
+        try:
+            run = int(run_id_str)
+        except ValueError:
+            # If conversion to int fails, use the string as is
+            run = run_id_str
         wb = openpyxl.load_workbook(xlsx_path, data_only=True)
         ws = wb.active
         # Find cassette columns: A/B, D/E, G/H, ...
